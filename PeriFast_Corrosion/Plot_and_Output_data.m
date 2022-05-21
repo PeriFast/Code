@@ -17,22 +17,20 @@ if (is_plot_in_Matlab == 1 && mod(t,t_plot) == 0)
     zlim([-Ldz/2+dz,Ldz/2-dz])
     title ( sprintf ('t =% 1.4f',t));
     colorbar
-    caxis([0 1.5*C_sat])
+    caxis([0 C_solid])
     view(2)
     drawnow
-    colorbar
     % take frame for movie generate
     frame = getframe(gcf);
     writeVideo(writerObj,frame);
 
 end
-if (is_output_to_Tecplot == 1 && mod(t,t_output) == 0)
+if (is_output_to_Tecplot == 1 && abs(t-t_target) <= dt)
     % output data to tecplot
     tec_tmp = tec_tmp + 1;
     tdata.cubes(tec_tmp).x=X;
     tdata.cubes(tec_tmp).y=Y;
     tdata.cubes(tec_tmp).z=Z;
-    tdata.cubes(tec_tmp).v(1,:,:,:)=C;
-    
-
+    tdata.cubes(tec_tmp).v(1,:,:,:)=chi_l;
+    t_target = t_target + t_output;
 end

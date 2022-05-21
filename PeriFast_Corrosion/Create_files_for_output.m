@@ -2,13 +2,13 @@
 if (is_output_to_Tecplot == 1)
     tdata=[];
     tdata.Nvar=4;
-    tdata.varnames={'x','y','z','T'};
+    tdata.varnames={'x','y','z','L'};
     tdata.cubes(1).zonename='mysurface zone';
     %totally nodes [3x2x2]
     tdata.cubes(1).x=X;
     tdata.cubes(1).y=Y;
     tdata.cubes(1).z=Z;
-    tdata.cubes(1).v(1,:,:,:)=C;
+    tdata.cubes(1).v(1,:,:,:)=chi_l;
     tec_tmp = 1;
 end
 

@@ -13,3 +13,4 @@ is_plot_in_Matlab = 1; % if want to plot at certain time and generate a video
 is_output_to_Tecplot = 1; % if want to write data to Tecplot at certain time
 t_plot = dt; % time interval of plotting and generating animation
 t_output = 10.0; %time interval of write data to Tecplot .plt file
+t_target = t_output;
