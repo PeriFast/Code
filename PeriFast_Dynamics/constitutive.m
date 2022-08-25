@@ -1,5 +1,5 @@
-function [L1, L2, L3, W, lambda_new, damage] = ...
-    constitutive(props,u1,u2,u3,lambda,delta,constit_invar,chiB,dv, Nx,Ny,Nz)
+function [L1, L2, L3, W, history_var] = ...
+    constitutive(props,u1,u2,u3,history_var,delta,constit_invar,chiB,dv, Nx,Ny,Nz)
 mat_type = props(1);
 
 
@@ -12,12 +12,12 @@ if mat_type == 0
     C21s_hat = C12s_hat; C31s_hat = C13s_hat; C32s_hat = C23s_hat;
     
     % compute repeated terms
+    lambda = history_var.lambda;
     chiB_lambda = chiB.*lambda;
     chiB_lambda_hat = fftn(chiB_lambda);
     chiB_lambda_u1_hat = fftn(chiB_lambda.*u1);
     chiB_lambda_u2_hat = fftn(chiB_lambda.*u2);
     chiB_lambda_u3_hat = fftn(chiB_lambda.*u3);
-    
     
     chiB_lambda_u1u1_hat = fftn(chiB_lambda.*u1.*u1);
     chiB_lambda_u1u2_hat = fftn(chiB_lambda.*u1.*u2);
@@ -44,7 +44,7 @@ if mat_type == 0
         ifftn(C31s_hat.*chiB_lambda_hat).*chiB_lambda.*u1 -...
         ifftn(C32s_hat.*chiB_lambda_hat).*chiB_lambda.*u2  -...
         ifftn(C33s_hat.*chiB_lambda_hat).*chiB_lambda.*u3);
-    
+
     %%% strain enegry density (W)
     
     % compute W
@@ -69,8 +69,8 @@ if mat_type == 0
         ifftn(C33s_hat.*chiB_lambda_hat).*u3.*u3 );
     %%% update lambda according to the damage model
     G0 = props(3);
-    lambda_new = lambda;
-    lambda_new( W >= G0/(2*delta) ) = 0;
+    lambda( W >= G0/(2*delta) ) = 0;
+    history_var.lambda = lambda;
     
     %%% update damage index
     omega0s_hat = constit_invar.omega0s_hat;
@@ -79,7 +79,7 @@ if mat_type == 0
     denominator = chiB.*ifftn(chiB_hat.*omega0s_hat);
     denominator(denominator == 0) = 1; %avoid division by zero
     
-    damage = 1 - numerator./denominator;
+    history_var.damage = 1 - numerator./denominator;
 end
 
 % state_based PD model
@@ -91,21 +91,24 @@ if mat_type == 1
     C21s_hat = C12s_hat; C31s_hat = C13s_hat; C32s_hat = C23s_hat;
     
     % compute repeated terms
+    lambda = history_var.lambda;
     chiB_lambda = chiB.*lambda;
     chiB_lambda_hat = fftn(chiB_lambda);
     chiB_lambda_u1_hat = fftn(chiB_lambda.*u1);
     chiB_lambda_u2_hat = fftn(chiB_lambda.*u2);
     chiB_lambda_u3_hat = fftn(chiB_lambda.*u3);
-    
-    
+        
     chiB_lambda_u1u1_hat = fftn(chiB_lambda.*u1.*u1);
     chiB_lambda_u1u2_hat = fftn(chiB_lambda.*u1.*u2);
     chiB_lambda_u1u3_hat = fftn(chiB_lambda.*u1.*u3);
     chiB_lambda_u2u2_hat = fftn(chiB_lambda.*u2.*u2);
     chiB_lambda_u2u3_hat = fftn(chiB_lambda.*u2.*u3);
     chiB_lambda_u3u3_hat = fftn(chiB_lambda.*u3.*u3);
+    
     % re-assign transformed adjusted kernels
-    A1s_hat = constit_invar.A1s_hat; A2s_hat = constit_invar.A2s_hat;A3s_hat = constit_invar.A3s_hat;
+    A1s_hat = constit_invar.A1s_hat; 
+    A2s_hat = constit_invar.A2s_hat;
+    A3s_hat = constit_invar.A3s_hat;
     m_kernels_hat = constit_invar.m_kernels_hat;
     
     m = chiB_lambda.*ifftn(chiB_lambda_hat.*m_kernels_hat,'symmetric')*dv;
@@ -115,7 +118,8 @@ if mat_type == 1
     nu = props (5);% Poisson ratio
     K = E/(3*(1 - 2*nu)); % bulk modulus
     G = E/(2*(1 + nu)); % shear modulus
-
+    
+    % PD dilatation
     theta = (3./m).*chiB_lambda.*(-ifftn(A1s_hat.*chiB_lambda_u1_hat +...
         A2s_hat.*chiB_lambda_u2_hat + A3s_hat.*chiB_lambda_u3_hat,'symmetric') + ...
         u1.*ifftn(A1s_hat.*chiB_lambda_hat,'symmetric') + ...
@@ -125,7 +129,6 @@ if mat_type == 1
     chiB_lambda_theta_hat = fftn(chiB_lambda.*theta);
     
     % compute internal force density (Li)
-    
     L1 = dv.*chiB_lambda.*(((3*K - 5*G)./m).*(-theta.*ifftn(A1s_hat.*chiB_lambda_hat,'symmetric') -...
         ifftn(A1s_hat.*chiB_lambda_theta_hat,'symmetric')) + ...
         (1./m).*(ifftn(C11s_hat.*chiB_lambda_u1_hat,'symmetric') +...
@@ -154,8 +157,7 @@ if mat_type == 1
         u3.*ifftn(C33s_hat.*chiB_lambda_hat,'symmetric')));
     
     %%% strain enegry density (W)
-    
-    
+
     % compute W
     W = 0.5*(dv*chiB_lambda.*(1./(2*m)).*(ifftn(C11s_hat.*chiB_lambda_u1u1_hat + ...
         2*C12s_hat.*chiB_lambda_u1u2_hat + 2*C13s_hat.*chiB_lambda_u1u3_hat +...
@@ -176,10 +178,11 @@ if mat_type == 1
         ifftn(C22s_hat.*chiB_lambda_hat).*u2.*u2 +...
         2*(ifftn(C23s_hat.*chiB_lambda_hat).*u2.*u3) +...
         ifftn(C33s_hat.*chiB_lambda_hat).*u3.*u3 ) + (K - 5*G/3).*theta.^2);
+    
     %%% update lambda according to the damage model
     G0 = props(3);
-    lambda_new = lambda;
-    lambda_new( W >= G0/(2*delta) ) = 0;
+    lambda( W >= G0/(2*delta) ) = 0;
+    history_var.lambda = lambda;
     
     %%% update damage index
     omega0s_hat = constit_invar.omega0s_hat;
@@ -188,7 +191,7 @@ if mat_type == 1
     denominator = chiB.*ifftn(chiB_hat.*omega0s_hat);
     denominator(denominator == 0) = 1; %avoid division by zero
     
-    damage = 1 - numerator./denominator;
+    history_var.damage = 1 - numerator./denominator;
     
 end
 
@@ -198,9 +201,9 @@ if mat_type == 2
     C11s_hat = constit_invar.C11s_hat; C12s_hat = constit_invar.C12s_hat;
     C13s_hat = constit_invar.C13s_hat; C22s_hat = constit_invar.C22s_hat;
     C23s_hat = constit_invar.C23s_hat; C33s_hat = constit_invar.C33s_hat;
-    C21s_hat = C12s_hat; C31s_hat = C13s_hat; C32s_hat = C23s_hat;
     
     % compute repeated terms
+    lambda = history_var.lambda;
     chiB_lambda = chiB.*lambda;
     chiB_lambda_hat = fftn(chiB_lambda);
     chiB_lambda_u1_hat = fftn(chiB_lambda.*u1);
@@ -220,53 +223,83 @@ if mat_type == 2
     nu = props (5);% Poisson ratio
     K = E/(3*(1 - 2*nu)); % bulk modulus
     G = E/(2*(1 + nu)); % shear modulus
-    const = 0.5*dv*18*K/(pi*delta^5);
-    beta_stab = const./(omega_stab +(omega_stab==0));
+    const = 0.5*dv*18*K/(pi*delta^5);% for stabilizer
+    beta_stab = const./(omega_stab +(omega_stab==0));% for stabilizer
     
-    %compute shape function
+    % compute shape_tensor K
     K11_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C11s_hat,'symmetric'))*dv;
     K12_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C12s_hat,'symmetric'))*dv;
     K13_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C13s_hat,'symmetric'))*dv;
-    K21_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C21s_hat,'symmetric'))*dv;
     K22_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C22s_hat,'symmetric'))*dv;
     K23_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C23s_hat,'symmetric'))*dv;
-    K31_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C31s_hat,'symmetric'))*dv;
-    K32_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C32s_hat,'symmetric'))*dv;
     K33_shape = chiB_lambda.*(ifftn(chiB_lambda_hat .* C33s_hat,'symmetric'))*dv;
     
     % compute inverse shape_tensor
-    K11_shape_inv = zeros(Ny,Nx,Nz);K12_shape_inv = zeros(Ny,Nx,Nz);K13_shape_inv = zeros(Ny,Nx,Nz);
-    K21_shape_inv = zeros(Ny,Nx,Nz);K22_shape_inv = zeros(Ny,Nx,Nz);K23_shape_inv = zeros(Ny,Nx,Nz);
-    K31_shape_inv = zeros(Ny,Nx,Nz);K32_shape_inv = zeros(Ny,Nx,Nz);K33_shape_inv = zeros(Ny,Nx,Nz);
     
-    for qx = 1:Ny
-        for qy = 1:Nx
-            for qz = 1:Nz
-                K_shape =[K11_shape(qx,qy,qz) K12_shape(qx,qy,qz) K13_shape(qx,qy,qz);...
-                    K21_shape(qx,qy,qz) K22_shape(qx,qy,qz) K23_shape(qx,qy,qz);...
-                    K31_shape(qx,qy,qz) K32_shape(qx,qy,qz) K33_shape(qx,qy,qz)];
-                if (det(K_shape)<= 0)
-                    K_shape = eye(3);
-                end
-                K_shape_inv = chiB(qx,qy,qz)*(K_shape\eye(3));
-                K11_shape_inv (qx,qy,qz) = K_shape_inv(1,1);
-                K12_shape_inv (qx,qy,qz) = K_shape_inv(1,2);
-                K13_shape_inv (qx,qy,qz) = K_shape_inv(1,3);
-                K21_shape_inv (qx,qy,qz) = K_shape_inv(2,1);
-                K22_shape_inv (qx,qy,qz) = K_shape_inv(2,2);
-                K23_shape_inv (qx,qy,qz) = K_shape_inv(2,3);
-                K31_shape_inv (qx,qy,qz) = K_shape_inv(3,1);
-                K32_shape_inv (qx,qy,qz) = K_shape_inv(3,2);
-                K33_shape_inv (qx,qy,qz) = K_shape_inv(3,3);
-            end
-        end
+    if (history_var.t == 0)%if first time step, allocate memory for inverse K and compute K_inv:
+        K11_shape_inv = zeros(Ny,Nx,Nz);K12_shape_inv = zeros(Ny,Nx,Nz);K13_shape_inv = zeros(Ny,Nx,Nz);
+        K21_shape_inv = zeros(Ny,Nx,Nz);K22_shape_inv = zeros(Ny,Nx,Nz);K23_shape_inv = zeros(Ny,Nx,Nz);
+        K31_shape_inv = zeros(Ny,Nx,Nz);K32_shape_inv = zeros(Ny,Nx,Nz);K33_shape_inv = zeros(Ny,Nx,Nz);
+        K_update = ones(Ny,Nx,Nz);% to update K for all nodes if t=0
+        %compute initial damage at t=0:
+        chiB_hat = fftn(chiB);
+        numerator = chiB_lambda.*ifftn(chiB_lambda_hat.*omega0s_hat);
+        denominator = chiB.*ifftn(chiB_hat.*omega0s_hat);
+        denominator(denominator == 0) = 1; %avoid division by zero
+        history_var.damage = 1 - numerator./denominator;
+        
+        
+    else % use K_inv values from previous step
+        K11_shape_inv =  history_var.K_inv11;
+        K12_shape_inv =  history_var.K_inv12;
+        K13_shape_inv =  history_var.K_inv13;
+        K21_shape_inv =  history_var.K_inv12;
+        K22_shape_inv =  history_var.K_inv22;
+        K23_shape_inv =  history_var.K_inv23;
+        K31_shape_inv =  history_var.K_inv13;
+        K32_shape_inv =  history_var.K_inv23;
+        K33_shape_inv =  history_var.K_inv33;
+        K_update = history_var.K_update;
     end
     
     
     
+    for qx = 1:Ny
+        for qy = 1:Nx
+            for qz = 1:Nz
+                % only update K and K_inv, for nodes that lost bonds in previous step
+                if K_update (qx,qy,qz)
+                    % K is symmetric
+                    K_shape =[K11_shape(qx,qy,qz) K12_shape(qx,qy,qz) K13_shape(qx,qy,qz);...
+                        K12_shape(qx,qy,qz) K22_shape(qx,qy,qz) K23_shape(qx,qy,qz);...
+                        K13_shape(qx,qy,qz) K23_shape(qx,qy,qz) K33_shape(qx,qy,qz)];
+                    if (det(K_shape)<= 0)
+                        K_shape = eye(3);
+                    end
+                    K_shape_inv = chiB(qx,qy,qz)*(K_shape\eye(3));
+                    K11_shape_inv (qx,qy,qz) = K_shape_inv(1,1);
+                    K12_shape_inv (qx,qy,qz) = K_shape_inv(1,2);
+                    K13_shape_inv (qx,qy,qz) = K_shape_inv(1,3);
+                    K21_shape_inv (qx,qy,qz) = K_shape_inv(2,1);
+                    K22_shape_inv (qx,qy,qz) = K_shape_inv(2,2);
+                    K23_shape_inv (qx,qy,qz) = K_shape_inv(2,3);
+                    K31_shape_inv (qx,qy,qz) = K_shape_inv(3,1);
+                    K32_shape_inv (qx,qy,qz) = K_shape_inv(3,2);
+                    K33_shape_inv (qx,qy,qz) = K_shape_inv(3,3);
+                end
+            end
+        end
+    end
     
+    % store K_inv for next time step:
+    history_var.K_inv11 = K11_shape_inv;
+    history_var.K_inv12 = K12_shape_inv; 
+    history_var.K_inv13 = K13_shape_inv; 
+    history_var.K_inv22 = K22_shape_inv; 
+    history_var.K_inv23 = K23_shape_inv; 
+    history_var.K_inv33 = K33_shape_inv; 
+     
     % compute derormation gradient (Fij)
-    
     
     F11 = 1 +  chiB_lambda.*((-ifftn(chiB_lambda_u1_hat.* A1s_hat,'symmetric') + ...
         u1.*chiB_lambda_A1s_hat_invfft).* K11_shape_inv + ...
@@ -274,7 +307,6 @@ if mat_type == 2
         u1.*chiB_lambda_A2s_hat_invfft).* K21_shape_inv +...
         (-ifftn(chiB_lambda_u1_hat.* A3s_hat,'symmetric') + ...
         u1.*chiB_lambda_A3s_hat_invfft).* K31_shape_inv)*dv;
-    
     
     F12 = chiB_lambda.*((-ifftn(chiB_lambda_u1_hat.* A1s_hat,'symmetric') + ...
         u1.*chiB_lambda_A1s_hat_invfft).* K12_shape_inv +...
@@ -289,7 +321,6 @@ if mat_type == 2
         u1.*chiB_lambda_A2s_hat_invfft).* K23_shape_inv +...
         (-ifftn(chiB_lambda_u1_hat.* A3s_hat,'symmetric') + ...
         u1.*chiB_lambda_A3s_hat_invfft).* K33_shape_inv)*dv;
-    
     
     F21 = chiB_lambda.*((-ifftn(chiB_lambda_u2_hat.* A1s_hat,'symmetric') + ...
         u2.*ifftn(A1s_hat.*chiB_lambda_hat,'symmetric')).* K11_shape_inv + ...
@@ -320,7 +351,7 @@ if mat_type == 2
         u3.*chiB_lambda_A2s_hat_invfft).* K21_shape_inv + ...
         (-ifftn(chiB_lambda_u3_hat.* A3s_hat,'symmetric') + ...
         u3.*chiB_lambda_A3s_hat_invfft).* K31_shape_inv)*dv;
-    %
+    
     
     F32 = chiB_lambda.*((-ifftn(chiB_lambda_u3_hat.* A1s_hat,'symmetric') + ...
         u3.*chiB_lambda_A1s_hat_invfft).* K12_shape_inv + ...
@@ -336,22 +367,19 @@ if mat_type == 2
         u3.*chiB_lambda_A2s_hat_invfft).* K23_shape_inv +...
         (-ifftn(chiB_lambda_u3_hat.* A3s_hat,'symmetric') + ...
         u3.*chiB_lambda_A3s_hat_invfft).* K33_shape_inv)*dv;
+    
     % compute Green strain tensor
     green_strain11 = 0.5.*(F11.*F11 + F21.*F21 + F31.*F31 - 1);
     green_strain12 = 0.5.*(F11.*F12 + F21.*F22 + F31.*F32 - 0);
     green_strain13 = 0.5.*(F11.*F13 + F21.*F23 + F31.*F33 - 0);
-    %     green_strain21 = 0.5.*(F12.*F11 + F22.*F21 + F32.*F31 - 0);
     green_strain21 = green_strain12;
     green_strain22 = 0.5.*(F12.*F12 + F22.*F22 + F32.*F32 - 1);
     green_strain23 = 0.5.*(F12.*F13 + F22.*F23 + F32.*F33 - 0);
-    %     green_strain31 = 0.5.*(F13.*F11 + F23.*F21 + F33.*F31 - 0);
     green_strain31 = green_strain13;
-    %     green_strain32 = 0.5.*(F13.*F12 + F23.*F22 + F33.*F32 - 0);
     green_strain32 = green_strain23 ;
     green_strain33 = 0.5.*(F13.*F13 + F23.*F23 + F33.*F33 - 1);
-    
-    
-    % compute second Piola-Kirchhoff stress tensor, Saint Venant–Kirchhoff model
+        
+    % compute second Piola-Kirchhoff stress tensor, Saint Venant-Kirchhoff model
     elast_const =  K - 2*G/3;
     sPK11 = 2*G.*green_strain11 + elast_const.*(green_strain11 + green_strain22 + green_strain33) ;
     sPK12 = 2*G.*green_strain12  ;
@@ -384,7 +412,6 @@ if mat_type == 2
         chiB_lambda_hat,F11,F12,F13,A1s_hat,beta_stab,u1,dv, chiB_lambda_A1s_hat_invfft,...
         chiB_lambda_A2s_hat_invfft,chiB_lambda_A3s_hat_invfft);
     
-    
     L2 = compute_Li(PK21,PK22,PK23, K11_shape_inv, K12_shape_inv, K13_shape_inv, K21_shape_inv,...
         K22_shape_inv, K23_shape_inv,K31_shape_inv,K32_shape_inv,K33_shape_inv,...
         A1s_hat, A2s_hat, A3s_hat,  chiB_lambda,chiB_lambda_u2_hat,omega0s_hat,...
@@ -405,13 +432,10 @@ if mat_type == 2
     
     %%% update lambda according to the damage model
     G0 = props(3);
-
-    lambda_new = lambda;
-    lambda_new( W >= G0/(2*delta) ) = 0;
     
-    if (sum(sum(sum(lambda-lambda_new )))>0)
-        aaa=0;
-    end
+    lambda( W >= G0/(2*delta) ) = 0;
+    history_var.lambda = lambda;
+    
     %%% update damage index
     
     chiB_hat = fftn(chiB);
@@ -419,11 +443,17 @@ if mat_type == 2
     denominator = chiB.*ifftn(chiB_hat.*omega0s_hat);
     denominator(denominator == 0) = 1; %avoid division by zero
     
+    damage_old = history_var.damage;
     damage = 1 - numerator./denominator;
+    %logical varibale to lable nodes that need to have their K updated
+    history_var.K_update = (damage ~= damage_old);
+    history_var.damage = damage;
     
 end
 
 end
+
+
 
 function Li = compute_Li(PK1,PK2,PK3, K11_shape_inv, K12_shape_inv, K13_shape_inv, K21_shape_inv,...
     K22_shape_inv, K23_shape_inv,K31_shape_inv,K32_shape_inv,K33_shape_inv,...
@@ -431,7 +461,10 @@ function Li = compute_Li(PK1,PK2,PK3, K11_shape_inv, K12_shape_inv, K13_shape_in
     chiB_lambda_hat,F1,F2,F3,As_hat,beta_stab,u,dv, chiB_lambda_A1s_hat_invfft,...
     chiB_lambda_A2s_hat_invfft,chiB_lambda_A3s_hat_invfft)
 
+% This function computes internal force density in i-direction for 
+% PD-correspondence materials
 
+% Li1 to Li6 are main components of the force density:
 Li1=(PK1.*((K11_shape_inv.*chiB_lambda_A1s_hat_invfft)+...
     (K12_shape_inv.*chiB_lambda_A2s_hat_invfft) +...
     (K13_shape_inv.*chiB_lambda_A3s_hat_invfft)));
@@ -440,7 +473,6 @@ Li2 = (PK2.*((K21_shape_inv.*chiB_lambda_A1s_hat_invfft)+...
     (K22_shape_inv.*chiB_lambda_A2s_hat_invfft) + ...
     (K23_shape_inv.*chiB_lambda_A3s_hat_invfft)));
 
-
 Li3 = (PK3.*((K31_shape_inv.*chiB_lambda_A1s_hat_invfft)+...
     (K32_shape_inv.*chiB_lambda_A2s_hat_invfft) +...
     (K33_shape_inv.*chiB_lambda_A3s_hat_invfft)));
@@ -448,6 +480,7 @@ Li3 = (PK3.*((K31_shape_inv.*chiB_lambda_A1s_hat_invfft)+...
 Li4 = ifftn(fftn(chiB_lambda.*(PK1.*...
     K11_shape_inv +PK2 .*K21_shape_inv + PK3.*K31_shape_inv))...
     .*A1s_hat,'symmetric');
+
 Li5 = ifftn(fftn(chiB_lambda.*(PK1.*...
     K12_shape_inv +PK2 .*K22_shape_inv + PK3.*K32_shape_inv))...
     .*A2s_hat,'symmetric');
@@ -456,11 +489,7 @@ Li6 = ifftn(fftn(chiB_lambda.*(PK1.*...
     K13_shape_inv +PK2 .*K23_shape_inv + PK3.*K33_shape_inv))...
     .*A3s_hat,'symmetric');
 
-% without stabilizer
-
-% Li = -chiB_lambda.*(Li1 + Li2 + Li3 + Li4 + Li5 +Li6).*dv;
-
-% stabilizer force
+% Li7 to Li9 are components of the stabilizer term
 Li7 = -2*ifftn(chiB_lambda_hat.* As_hat,'symmetric')...
     -2*u.*ifftn(chiB_lambda_hat.*omega0s_hat,'symmetric') + ...
     2*ifftn(chiB_lambda_u_hat.*omega0s_hat,'symmetric');
@@ -470,10 +499,8 @@ Li8 = F1 .*ifftn(chiB_lambda_hat .* A1s_hat,'symmetric') + F2.*...
 Li9 = ifftn(fftn(chiB_lambda.*F1).*A1s_hat, 'symmetric') +...
     ifftn(fftn(chiB_lambda.*F2).*A2s_hat, 'symmetric') +...
     ifftn(fftn(chiB_lambda.*F3).*A3s_hat, 'symmetric');
-
-
+% assemble all components to find force density in i-direction (Li)
 Li = (-chiB_lambda.*(Li1 + Li2 + Li3 + Li4 + Li5 +Li6)+...
     chiB_lambda.*beta_stab.*(Li7 +Li8+ Li9))*dv;
-
-
 end
+
