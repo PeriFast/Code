@@ -14,16 +14,16 @@ LASTN = maxNumCompThreads(8);
 
 % Get inputs
 [props, t_max, dt, snap, Fb, IC_u, IC_v, trac_x, trac_y, trac_z,...
-    dispBC_x, dispBC_y, dispBC_z] = inputs;
+    dispBC_x, dispBC_y, dispBC_z, plot_output] = inputs;
 
 % Get nodes and sets
 [delta,Box_T,Nx,Ny,Nz,X,Y,Z,dv,chiB,chit_x,chit_y,chit_z,chiG_x,chiG_y,...
     chiG_z,chi_predam,chiOx,chiOy,chiOz,dy] = nodes_and_sets;
 
-% construct constitutive invariants
+% Construct constitutive invariants
 constit_invar = pre_constitutive(props,delta,X,Y,Z,Box_T);
 
-% assign initial conditions
+% Assign initial conditions
 u1_0 = IC_u(1).func(X,Y,Z);
 u2_0 = IC_u(2).func(X,Y,Z);
 u3_0 = IC_u(3).func(X,Y,Z);
@@ -31,27 +31,31 @@ v1_0 = IC_v(1).func(X,Y,Z);
 v2_0 = IC_v(2).func(X,Y,Z);
 v3_0 = IC_v(3).func(X,Y,Z);
 
-% assign lambda0 (pre-damage)
+% Assign lambda0 (pre-damage)
 lambda0 = 1 - chi_predam;
+history_var.lambda = lambda0;
 
 % Compute initial internal forces, tractions, and body forces at t=0
 u1 = u1_0; u2 = u2_0; u3 = u3_0;
 v1 = v1_0; v2 = v2_0; v3 = v3_0;
-t = 0; lambda = lambda0;
+t = 0;  history_var.t = t;
 [btx,bty,btz] = update_tractions(trac_x,trac_y,trac_z,chit_x,chit_y,...
     chit_z,delta,Nx,Ny,Nz,X,Y,Z,t,dy);
 Fbx = Fb(1).func(X,Y,Z,t);
 Fby = Fb(2).func(X,Y,Z,t);
 Fbz = Fb(3).func(X,Y,Z,t);
-[L1, L2, L3, W, lambda, damage] = constitutive(props,u1,u2,u3,lambda,delta,...
+[L1, L2, L3, W, history_var] = constitutive(props,u1,u2,u3,history_var,delta,...
     constit_invar,chiB,dv, Nx,Ny,Nz);
 rho = props(2);
+
 k = 1;% time step counter
 ks = 1;% snapshot counter
-Output = struct;
-tic
+Output = struct;% struct varibale to record output data
+
 for t = dt:dt:t_max % t is the current time
-    % compute volume constraints
+    
+    fprintf('time step: %d\n',k);
+    % Compute volume constraints
     [wx,wy,wz] = update_VC(dispBC_x,dispBC_y,dispBC_z,...
         chiG_x,chiG_y,chiG_z,Nx,Ny,Nz,X,Y,Z,t);
     % Update u(x,y,z,t)
@@ -60,14 +64,16 @@ for t = dt:dt:t_max % t is the current time
     u2 = chiOy.*(u2 + dt*(v2 + (dt/2/rho)*(L2 + bty + Fby))) + wy;
     u3 = chiOz.*(u3 + dt*(v3 + (dt/2/rho)*(L3 + btz + Fbz))) + wz;
     
-    % store old values for velocity-verlet before updating
+    % Store old values for velocity-verlet before updating
     L1_old = L1; btx_old = btx; Fbx_old = Fbx;
     L2_old = L2; bty_old = bty; Fby_old = Fby;
     L3_old = L3; btz_old = btz; Fbz_old = Fbz;
     
     % Update internal forces, damage, body forces, and BC
-    [L1, L2, L3, W, lambda, damage] = constitutive(props,u1,u2,u3,lambda,delta,...
+
+    [L1, L2, L3, W, history_var] = constitutive(props,u1,u2,u3,history_var,delta,...
         constit_invar,chiB,dv, Nx,Ny,Nz);
+ 
     [btx,bty,btz] = update_tractions(trac_x,trac_y,trac_z,chit_x,chit_y,...
         chit_z,delta,Nx,Ny,Nz,X,Y,Z,t,dy);
     Fbx = Fb(1).func(X,Y,Z,t);
@@ -81,14 +87,29 @@ for t = dt:dt:t_max % t is the current time
         (L2 + bty + Fby)));
     v3 = chiOz.*(v3 + (dt/2/rho)*((L3_old + btz_old + Fbz_old)+...
         (L3 + btz + Fbz)));
-    % Visualization (snapshots)
-    if (mod(t/dt,snap)== 0)
-        % dump data in the struct variable : Output
-        Output = dump_output(Output,ks,u1,u2,u3,v1,v2,v3,W,damage,lambda,t);
-        visualization(Output,ks,X,Y,Z,chiB,t);
+    
+    % Dump output (snapshots)
+    if (mod(t/dt,snap) < 1e-6)
+        % Dump data in the struct variable: Output
+        fprintf('...dumping output...\n');
+        Output = dump_output(Output,ks,u1,u2,u3,v1,v2,v3,W,history_var);
+        % Visualization (snapshots)
+        if (plot_output == 1)
+            fprintf('...plotting...\n');
+            visualization(Output,ks,X,Y,Z,chiB,t);
+        end
         ks = ks + 1;
     end
+    
     k = k + 1;
-    toc
+    
 end
+
+fprintf('***** ANALYSIS COMPLETED *****\n');
+% save outputs to Results.mat file:
+fprintf('...saving results to file...\n');
+save('Results.mat','Output','X','Y','Z','t','chiB','-v7.3')
+
+
+
 
