@@ -1,26 +1,32 @@
-function visualization(Output,ks,X,Y,Z,chiB,t) 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This module takes the outputs from dump_output.m, the snapshot number,
+% nodal coordinates, and the body node set, and uses them to visualize the
+% results 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-chiB_lambda = chiB.*(Output(ks).lambda);
+% for plotting outputs
+chiB_lambda = chiB.*(Output(ks).lambda); % mask nodes outside the body or damaged nodes
 plot_nodes = logical(chiB_lambda);% nodes that belong to the main body
-x_plot = X(plot_nodes);
-y_plot = Y(plot_nodes);
-z_plot = Z(plot_nodes);
+x_plot = X(plot_nodes); %  coorniates of nodes in x-direction
+y_plot = Y(plot_nodes); %  coorniates of nodes in y-direction
+z_plot = Z(plot_nodes); %  coorniates of nodes in z-direction
 
 % output selection for plots
-u1_plot = Output(ks).u1(plot_nodes);
-u2_plot = Output(ks).u2(plot_nodes);
-u3_plot = Output(ks).u3(plot_nodes);
-v1_plot = Output(ks).v1(plot_nodes);
-v2_plot = Output(ks).v2(plot_nodes);
-v3_plot = Output(ks).v3(plot_nodes);
-damage_plot = Output(ks).d(plot_nodes);
-energy_plot = Output(ks).W(plot_nodes);
+u1_plot = Output(ks).u1(plot_nodes);  % displacement in x- direction 
+u2_plot = Output(ks).u2(plot_nodes);  % displacement in y- direction
+u3_plot = Output(ks).u3(plot_nodes);  % displacement in z- direction
+v1_plot = Output(ks).v1(plot_nodes);  % velocity in x- direction
+v2_plot = Output(ks).v2(plot_nodes);  % velocity in y- direction
+v3_plot = Output(ks).v3(plot_nodes);  % velocity in z- direction
+damage_plot = Output(ks).d(plot_nodes); % damage index
+energy_plot = Output(ks).W(plot_nodes);  % strain energy density
 
 % nodal coordinates in current configurartion
 xcur_plot = x_plot + u1_plot;
 ycur_plot = y_plot + u2_plot;
 zcur_plot = z_plot + u3_plot;
 
+% plot damage index as figure (1)
 figure(1)
 scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,damage_plot(:));
 colormap jet
@@ -30,8 +36,11 @@ title ( sprintf ('d , t = %1.2e sec',t));
 colorbar;
 drawnow
 
+
+
 %%% user can uncomment the part below to plot other outputs:
 
+% plot v1 as figure (2)
 % figure(2)
 % scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,v1_plot(:));
 % colormap jet
@@ -41,6 +50,7 @@ drawnow
 % colorbar;
 % drawnow
 % 
+% plot v2  as figure (3)
 % figure(3)
 % scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,v2_plot(:));
 % colormap jet
@@ -50,6 +60,7 @@ drawnow
 % colorbar;
 % drawnow
 % 
+% plot strain energy density  figure (4)
 % figure(4)
 % scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,energy_plot(:));
 % colormap jet
@@ -59,4 +70,4 @@ drawnow
 % colorbar;
 % drawnow
      
-end
+
