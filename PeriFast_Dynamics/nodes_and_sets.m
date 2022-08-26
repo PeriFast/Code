@@ -1,11 +1,18 @@
-% create mesh file
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this function contains the PD horizon and discrete geometrical data 
+% including nodal coordinates and  characteristic functions that define
+% various subdomains: the original body,constrained volumes,
+% pre-damaged regions, and subregions where tractions applied as body forces 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [delta,Box_T,Nx,Ny,Nz,X,Y,Z,dv,chiB,chit_x,chit_y,chit_z,...
     chiG_x,chiG_y,chiG_z,chi_predam,chiOx,chiOy,chiOz,dy]...
     = nodes_and_sets
 
 
-delta = 1.02e-3;
+delta = 1.02e-3;  % horizon size
 
+% define enclosing box
 x_min = 0; x_max = 0.1;
 y_min = 0; y_max = 0.04;
 z_min = 0; z_max = 0.002;
@@ -14,6 +21,7 @@ Ldx = x_max - x_min; % fitted_box - x dimension
 Ldy = y_max - y_min; % fitted_box - y dimension
 Ldz = z_max - z_min; % fitted_box - z dimension
 
+% define number of nodes in each direction
 Nx = 510; % resolution in x (Best for FFT to use a power of 2)
 Ny = 210;  % resolution in y
 Nz = 20;  % resolution in z
@@ -76,7 +84,7 @@ chiG_z.No = 0;% number of tractions in z
 chi_predam = double(chiB == 1 & abs(Y - y_min - Ldy/2)<= (delta/2) &...
     X < x_min + Ldx/2);
 
-% assemble chi_gamma and chi_t for boundaries
+% assemble chi_gamma for boundaries
 chiGx = assemble_chi(chiG_x,Nx,Ny,Nz);
 chiGy = assemble_chi(chiG_y,Nx,Ny,Nz);
 chiGz = assemble_chi(chiG_z,Nx,Ny,Nz);
@@ -86,6 +94,8 @@ chiOz = chiB - chiGz;
 
 end
 
+% function to assemble chi_gamma for volume contraints pretaining to each
+% coordinate direction
 function chi_total = assemble_chi (chi,Nx,Ny,Nz)
 chi_total = zeros(Ny,Nx,Nz);
 n = chi.No;
