@@ -1,9 +1,10 @@
-% create input file
-function [props, t_max, dt, snap, Fb, IC_u, IC_v, trac_x, trac_y, trac_z,...
-    dispBC_x, dispBC_y, dispBC_z, plot_output] = inputs
-% Physical inputs:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this module contains certain input data including material properties, 
+% simulation time, time steps, initial and boundary conditions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-props = [0; 2440; 3.8; 72e9; 0.25]; % material properties
+% Physical inputs:
+props = [1; 2440; 3.8; 72e9; 0.25]; % material properties
 % props (1): mat_type (0:BB, 1: Linearized SB, 2: correspondence SB)
 % props (2): rho(density) 
 % props (3): G0 (fracture energy release rate)
@@ -12,10 +13,13 @@ props = [0; 2440; 3.8; 72e9; 0.25]; % material properties
 
 t_max = 33e-6; % maximum time
 dt = 5e-8; % time step
+
+% output parameters
 snap = 5; % number of steps between snapshots(dumping output data)
+tecplot_output = 1 ; % provide tecplot file :1,  Do not provide tecplot file:0
 
 % visualization parameter
-plot_output = 1 ; % plot output during analysis:1,  Do not plot:0
+plot_output = 1 ; % plot output(Matlab plot) during analysis:1,  Do not plot:0
 
 %%% Body force density functions:
 Fb(1).func = @(x,y,z,t)0;
@@ -50,5 +54,3 @@ dispBC_x.No = 0;% number of tractions in x
 dispBC_y.No = 0;% number of tractions in y
 % in z
 dispBC_z.No = 0;% number of tractions in z
-
-end
