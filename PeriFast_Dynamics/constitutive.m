@@ -1,6 +1,16 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function takes the displacement field, history-dependent variables
+% such as the old damage parameter, the material properties (defined in 
+% inputs.m), discretization info (defined in nodes_and_sets.m), and the
+% invariant terms in the constitutive response (from pre_constitutive.m)
+% as inputs, and returns the internal force density, strain energy density,
+% and updated history-dependnet variables(e.g. damage) as outputs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [L1, L2, L3, W, history_var] = ...
     constitutive(props,u1,u2,u3,history_var,delta,constit_invar,chiB,dv, Nx,Ny,Nz)
-mat_type = props(1);
+
+mat_type = props(1); % material model
 
 
 % bond_based PD model
