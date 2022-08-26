@@ -14,7 +14,7 @@ z_max = Ldz/2;
 % One periodic Domain (T)
 % extend 1 horizon size at each end, in order to avoid wrap-up 
 % and use ficitious node method to apply boundary conditions
-extension = 1.5*delta;
+extension = 1.0*delta;
 x_min_T = x_min - extension;
 x_max_T = x_max + extension;
 y_min_T = y_min - extension;
