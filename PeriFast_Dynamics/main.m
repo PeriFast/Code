@@ -10,7 +10,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PeriFast/Dynamics, a compact and user-friendly MATLAB code for
 % fast peridynamic (PD) simulations for deformation and fracture.
-% By: Siavash Jafarzadeh, Farzaneh Mousavi, Florin Bobaru
+% By: Siavash Jafarzadeh, Farzaneh Mousavi,Adam Larios and Florin Bobaru
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear; clc;
