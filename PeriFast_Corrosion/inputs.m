@@ -11,7 +11,7 @@ t_max = 80; % corrosion duration time, unit in s
 dt = 1e-3; % time step (should satisfy the stability condition)
 
 %visualiztion parameters
-is_plot_in_Matlab = 1; % if want to plot at certain time and generate a video
-is_output_to_Tecplot = 1; % if want to write data to Tecplot at certain time
-t_output = 5; %time interval of write data to Tecplot .plt file
+is_plot_in_Matlab = 0; % if want to plot at certain time and generate a video
+is_output_to_Tecplot = 0; % if want to write data to Tecplot at certain time
+t_output = 0.1; %time interval of write data to Tecplot .plt file
 t_target = t_output;
