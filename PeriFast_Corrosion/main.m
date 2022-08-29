@@ -15,9 +15,9 @@ clear; clc; close all;
 % Physical inputs for pitting corrosion problems
 inputs;
 nodes_and_sets;
-Initial_conditions;
-Kernel_functions;
-Boundary_conditions;
+initial_conditions;
+boundary_conditions;
+kernel_functions;
 % %output to tecplot file
 if (is_output_to_Tecplot == 1)
     tdata=[];
@@ -90,4 +90,4 @@ if (is_output_to_Tecplot)
     mat2tecplot(tdata,'UNL_N_pitting_corrosion.plt')
 end
 fprintf('...saving results to file...\n');
-save('Results.mat','Output','X','Y','Z','t','C','-v7.3')
+save('Results.mat','Output','X','Y','Z','t','chi_N','chi','-v7.3')

@@ -14,7 +14,7 @@ z_max = Ldz/2;
 % One periodic Domain (T)
 % extend 1 horizon size at each end, in order to avoid wrap-up 
 % and use ficitious node method to apply boundary conditions
-extension = 1.5*delta;
+extension = 1.0*delta;
 x_min_T = x_min - extension;
 x_max_T = x_max + extension;
 y_min_T = y_min - extension;
@@ -29,7 +29,7 @@ Lz_T = z_max_T - z_min_T;
 % Discretize the domain
 Nx = 2^8; % resolution in x (Best for FFT to use a power of 2)
 Ny = 2^8; % resolution in y
-Nz = 2^7; % resolution in z
+Nz = 2^6; % resolution in z
 dx = Lx_T/Nx; % grid size in x
 dy = Ly_T/Ny; % grid size in y
 dz = Lz_T/Nz; % grid size in z
@@ -42,9 +42,9 @@ m = delta/dx;% m value
 % Mask functions:
 % Construct Mask function (chi) to distinguish the ficititious nodes
 chi = ones (Nx, Ny, Nz);
-chi (X <(x_min_T + delta) | X > (x_max_T - delta)) = 0;
-chi (Y <(y_min_T + delta) | Y > (y_max_T - delta)) = 0;
-chi (Z <(z_min_T + delta) | Z > (z_max_T - delta)) = 0;
+chi (X <x_min | X > x_max) = 0;
+chi (Y <y_min | Y > y_max) = 0;
+chi (Z <z_min | Z > z_max) = 0;
 % create the geometry of the big N
 chi_N = ones(Nx,Ny,Nz);
 chi_N(X<-65e-6 & (Y<35e-6 & Y>-35e-6)) = 0;
@@ -56,4 +56,3 @@ chi_N((X<25e-6 & X>15e-6) & (Y>35e-6 & Y<60e-6)) = 1;
 chi_N(X>75e-6 | X<-75e-6) = 0;
 chi_N(Y>60e-6 | Y<-60e-6) = 0;
 chi_N(Z>20e-6 | Z<-20e-6) = 0;
-
