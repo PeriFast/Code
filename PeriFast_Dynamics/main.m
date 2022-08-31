@@ -10,7 +10,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PeriFast/Dynamics, a compact and user-friendly MATLAB code for
 % fast peridynamic (PD) simulations for deformation and fracture.
-% By: Siavash Jafarzadeh, Farzaneh Mousavi,Adam Larios and Florin Bobaru
+% By: Siavash Jafarzadeh, Farzaneh Mousavi and Florin Bobaru
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear; clc;
@@ -61,11 +61,15 @@ if (tecplot_output == 1)
    fprintf(fileID1,'%6s %6s %6s %12s\r\n','x','y','z','damage');
 end
 
+
 for t = dt:dt:t_max % t is the current time
     
+    history_var.t = t;
     fprintf('time step: %d\n',k);
+    
     % Compute volume constraints
      update_VC;
+
     % Update u(x,y,z,t)
     u1 = chiOx.*(u1 + dt*(v1 + (dt/2/rho)*(L1 + btx + Fbx))) + wx;
     u2 = chiOy.*(u2 + dt*(v2 + (dt/2/rho)*(L2 + bty + Fby))) + wy;
@@ -82,6 +86,7 @@ for t = dt:dt:t_max % t is the current time
         constit_invar,chiB,dv, Nx,Ny,Nz);
  
     update_tractions;
+    
     Fbx = Fb(1).func(X,Y,Z,t);
     Fby = Fb(2).func(X,Y,Z,t);
     Fbz = Fb(3).func(X,Y,Z,t);
@@ -108,9 +113,8 @@ for t = dt:dt:t_max % t is the current time
     end
     
     k = k + 1;
-   
-end
 
+end
 fprintf('***** ANALYSIS COMPLETED *****\n');
 % save outputs to Results.mat file:
 fprintf('...saving results to file...\n');
