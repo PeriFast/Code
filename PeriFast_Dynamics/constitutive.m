@@ -304,9 +304,12 @@ if mat_type == 2
     % store K_inv for next time step:
     history_var.K_inv11 = K11_shape_inv;
     history_var.K_inv12 = K12_shape_inv; 
-    history_var.K_inv13 = K13_shape_inv; 
+    history_var.K_inv13 = K13_shape_inv;
+    history_var.K_inv21 = K21_shape_inv;
     history_var.K_inv22 = K22_shape_inv; 
-    history_var.K_inv23 = K23_shape_inv; 
+    history_var.K_inv23 = K23_shape_inv;
+    history_var.K_inv31 = K31_shape_inv;
+    history_var.K_inv32 = K32_shape_inv;
     history_var.K_inv33 = K33_shape_inv; 
      
     % compute derormation gradient (Fij)
@@ -456,7 +459,7 @@ if mat_type == 2
     damage_old = history_var.damage;
     damage = 1 - numerator./denominator;
     %logical varibale to lable nodes that need to have their K updated
-    history_var.K_update = (damage ~= damage_old);
+    history_var.K_update = (abs(damage - damage_old) > 1e-6);
     history_var.damage = damage;
     
 end
