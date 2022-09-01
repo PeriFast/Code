@@ -1,7 +1,7 @@
 if(corrosion_type == 0)
-    uniform_corrosion_time_integration(dt,C,C_w,C_sat,chi_l,chi,Nx,Ny,Nz,convolveInFourier_diff,convolveInFourier_corr);
+    C = uniform_corrosion_time_integration(dt,C,C_w,C_sat,chi_l,chi,Nx,Ny,Nz,convolveInFourier_diff,convolveInFourier_corr);
 else
-    pitting_corrosion_time_integration(dt,C,C_w,C_sat,chi_l,chi_N,chi,Nx,Ny,Nz,convolveInFourier_diff,convolveInFourier_corr);
+    C = pitting_corrosion_time_integration(dt,C,C_w,C_sat,chi_l,chi_N,chi,Nx,Ny,Nz,convolveInFourier_diff,convolveInFourier_corr);
 end
 
 function [C] = pitting_corrosion_time_integration(dt,C,C_w,C_sat,chi_l,chi_N,chi,Nx,Ny,Nz,convolveInFourier_diff,convolveInFourier_corr)

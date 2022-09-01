@@ -27,8 +27,8 @@ Ly_T = y_max_T - y_min_T;
 Lz_T = z_max_T - z_min_T;
 
 % Discretize the domain
-Nx = 2^8; % resolution in x (Best for FFT to use a power of 2)
-Ny = 2^8; % resolution in y
+Nx = 2^7; % resolution in x (Best for FFT to use a power of 2)
+Ny = 2^7; % resolution in y
 Nz = 2^6; % resolution in z
 dx = Lx_T/Nx; % grid size in x
 dy = Ly_T/Ny; % grid size in y
@@ -37,7 +37,7 @@ x = x_min_T + (0:(Nx-1))*dx;
 y = y_min_T + (0:(Ny-1))*dy;
 z = z_min_T + (0:(Nz-1))*dz;
 [X,Y,Z] = meshgrid(x,y,z);
-m = delta/dx;% m value
+m = [delta/dx, delta/dy, delta/dz];% m value along x, y, z directions
 
 % Mask functions:
 % Construct Mask function (chi) to distinguish the ficititious nodes
