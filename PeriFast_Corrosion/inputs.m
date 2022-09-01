@@ -1,4 +1,5 @@
 % Physical inputs for pitting corrosion problems
+corrosion_type = 1; % 0 represents uniform corrosion and 1 represents pitting corrosion
 K = 860e-12; % diffusion coefficient of ion in the solution, unit in m^2/s
 cur_i = 5.1e3; % initial corrosion current density, unit in A/m^2
 n = 2.19;% average charge number of SS 304, no unit
