@@ -45,7 +45,8 @@ chi = ones (Nx, Ny, Nz);
 chi (X <x_min | X > x_max) = 0;
 chi (Y <y_min | Y > y_max) = 0;
 chi (Z <z_min | Z > z_max) = 0;
-% create the geometry of the big N
+% create the geometry of the big N, the dimensions can be found in 
+%'PeriFast/Corrosion: a 3D pseudo-spectral peridynamic code for corrosion'
 chi_N = ones(Nx,Ny,Nz);
 chi_N(X<-65e-6 & (Y<35e-6 & Y>-35e-6)) = 0;
 chi_N(X>65e-6 & (Y<35e-6 & Y>-35e-6)) = 0;
