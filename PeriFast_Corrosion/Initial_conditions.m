@@ -22,8 +22,8 @@ end
 % Construct Mask function (chi_l) for liquid domain:
 chi_l = zeros(Nx,Ny,Nz);
 chi_l_pit = zeros(Nx,Ny,Nz);
-chi_l (C0 < C_sat) = 1; %find liquid node
-chi_l_pit(chi_l==1 & chi_N==1) = 1;
+chi_l (C0 < C_sat) = 1; %find liquid nodes
+chi_l_pit(chi_l==1 & chi_N==1) = 1; %find the liquid nodes inside pits
 % Construct Mask function for salt layer
 chi_salt = zeros(Nx,Ny,Nz);
 % Construct Mask function (chi_s) for solid domain

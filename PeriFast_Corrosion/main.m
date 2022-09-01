@@ -8,9 +8,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This code could solve 3D peridynamic corrosion problems: uniform
 % corrosion and pitting corrosion with multi pits growth via FCBM
+% Detailed description of this code can be found in 
+% 'PeriFast/Corrosion: a 3D pseudo-spectral peridynamic code for corrosion'
 % by: Longzhen Wang, Dr. Siavash Jafarzadeh, Dr. Florin Bobaru
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all;
+% (For multithreaded computation, give the
+%  maximum number of computational threads you want to use in parentheses):
+LASTN = maxNumCompThreads(8);
 % Physical inputs for pitting corrosion problems
 inputs;
 nodes_and_sets;
@@ -39,7 +44,6 @@ end
 time_step = 1;% time step counter
 ks = 1;% snapshot counter
 Output = struct;% struct variable to record output data
-
 for t = dt:dt:t_max 
     fprintf('time step: %d\n',time_step);
     % update the volume constraints
