@@ -6,9 +6,8 @@
 %  /_/      /_____/   /_/ |_|  /___/   /_/       /_/  |_|/____/  /_/      %
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This code solves a 3D peridynamic corrosion problem with multi pits
-% growth
-% via boundary-adapted spectral method with Embedded Constraint(BASM-EC)
+% This code could solve 3D peridynamic corrosion problems: uniform
+% corrosion and pitting corrosion with multi pits growth via FCBM
 % by: Longzhen Wang, Dr. Siavash Jafarzadeh, Dr. Florin Bobaru
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; clc; close all;
@@ -46,18 +45,7 @@ for t = dt:dt:t_max
     % update the volume constraints
     update_VC;
     % update the concentration C
-    C = chi.*(C+ + dt*((chi_l).*ifftn(convolveInFourier_diff(fftn(C.*(chi_l)))) -...
-    ((chi_l).*C).*ifftn(convolveInFourier_diff(fftn(chi_l))) + ...
-    (chi_l_pit-chi_salt).*ifftn(convolveInFourier_corr(fftn(chi_s))) -...
-    chi_s.*ifftn(convolveInFourier_corr(fftn(chi_l_pit-chi_salt)))))+ (1 - chi).*w;
-
-    % Update mask functions for liquid domain, salt layer, and liquid domain:
-    chi_l (C < C_sat) = 1; %find liquid node
-    chi_l_pit(chi_l==1 & chi_N==1) = 1;
-    chi_salt = zeros(Nx,Ny,Nz);
-    chi_salt(C >= C_sat & chi_l_pit==1) = 1;
-    chi_s = 1 - chi_l;
-    
+    update_C;
     % Dump output (snapshots)
     if (abs(t-t_target) <= dt)
         % Dump data in the struct variable: Output

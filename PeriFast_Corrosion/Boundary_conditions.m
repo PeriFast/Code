@@ -16,7 +16,7 @@ BCf_value = 0; % on the side surface with normal vector = {0,-1,0}
 
 % Apply nonlocal Boundary Conditions with fictitious nodes method:
 % Force all fictitious nodes outside physical domain has C=0
-w = zeros(Nx,Ny,Nz);
+C_w = zeros(Nx,Ny,Nz);
 % apply boundary condition on top surface with normal vector = [0,0,1]
 gBCa = (z_max - delta < Z & Z < z_max);
 n1 = find(gBCa(1,1,:));
@@ -41,4 +41,4 @@ n5 = find(gBCe(:,1,1));
 gBCf = (y_min < Y & Y < y_min + delta + dy);
 n6 = find(gBCf(:,1,1));
 
-C = chi.*C0 + (1 - chi).*w;
+C = chi.*C0 + (1 - chi).*C_w;
