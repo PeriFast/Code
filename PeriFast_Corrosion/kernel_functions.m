@@ -11,6 +11,8 @@ kernel_corr = @(x1,x2,x3) 3*q/(pi*delta^3) * 1./(sqrt(x1.^2+x2.^2+x3.^2)) .*(sqr
 % Descritized kernel diffusion and corrosion
 mu_diff = kernel_diff(X - x_c, Y - y_c, Z - z_c); %kernel for diffusion in liquid
 mu_diff(X==x_c & Y==y_c & Z==z_c) = 0; % zero out the singularity
+beta = sum(sum(sum(mu_diff.*(dx*dy*dz))));
+stability_check(dt,beta,t_max);
 muS_diff_hat = fftn(fftshift(mu_diff)); % adjust kernel functions on the periodic box T
 
 mu_corr = kernel_corr(X - x_c, Y - y_c, Z - z_c); %kernel for corrosion (solid to liquid)
@@ -20,3 +22,15 @@ muS_corr_hat = fftn(fftshift(mu_corr));
 % Mutiplication function to compute convolution integrals in Fourier Space
 convolveInFourier_diff = @(m) muS_diff_hat.*m*dx*dy*dz;
 convolveInFourier_corr = @(m) muS_corr_hat.*m*dx*dy*dz;
+
+function stability_check(dt,beta,t_max)
+if(dt > 1/beta)
+    warning('dt may not meet the stability condition. If user notice unstable results, set dt less than %d',1/beta);
+end
+if(dt < 0)
+    error('dt must be positive');
+end
+if(dt > t_max)
+    error('dt can not large than the total time');
+end
+end
