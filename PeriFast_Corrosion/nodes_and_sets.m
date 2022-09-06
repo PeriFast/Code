@@ -38,7 +38,7 @@ y = y_min_T + (0:(Ny-1))*dy;
 z = z_min_T + (0:(Nz-1))*dz;
 [X,Y,Z] = meshgrid(x,y,z);
 m = [delta/dx, delta/dy, delta/dz];% m value along x, y, z directions
-
+discretization_check(delta,Ldx,Ldy,Ldz,extension,Nx,Ny,Nz,m);
 % Mask functions:
 % Construct Mask function (chi) to distinguish the ficititious nodes
 chi = ones (Nx, Ny, Nz);
@@ -57,3 +57,50 @@ chi_N((X<25e-6 & X>15e-6) & (Y>35e-6 & Y<60e-6)) = 1;
 chi_N(X>75e-6 | X<-75e-6) = 0;
 chi_N(Y>60e-6 | Y<-60e-6) = 0;
 chi_N(Z>20e-6 | Z<-20e-6) = 0;
+
+function discretization_check(delta,Ldx,Ldy,Ldz,extension,Nx,Ny,Nz,m)
+%check horizon size
+if(delta<=0)
+    error('Delta must be a positive number');
+end
+if(Ldx<=0)
+    error('Physical domain length along x has to be positive');
+end
+if(Ldy<=0)
+    error('Physical domain length along y has to be positive');
+end
+if(Ldz<=0)
+    error('Physical domain length along z has to be positive');
+end
+if(delta >= Ldx)
+    warning('delta is larger than physical domain length along x, choose a smaller horizon');
+end
+if(delta >= Ldy)
+    warning('delta is larger than physical domain length along y, choose a smaller horizon');
+end
+if(delta >= Ldz)
+    warning('delta is larger than physical domain length along z, choose a smaller horizon');
+end
+if(extension < delta)
+    error('To apply fictitious node method, the extension has to be at least delta');
+end
+if(Nx<=0)
+    error('Resolution in x has to be positive');
+end
+if(Ny<=0)
+    error('Resolution in y has to be positive');
+end
+if(Nz<=0)
+    error('Resolution in z has to be positive');
+end
+if(m(1)< 3)
+    warning('delta is less than three times discretization,finer discretization along x is recommended');
+end
+if(m(2)< 3)
+    warning('delta is less than three times discretization,finer discretization along y is recommended');
+end
+if(m(3)< 3)
+    warning('delta is less than three times discretization,finer discretization along z is recommended');
+end
+end
+
