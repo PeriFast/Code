@@ -49,19 +49,26 @@ Fbx = Fb(1).func(X,Y,Z,t);
 Fby = Fb(2).func(X,Y,Z,t);
 Fbz = Fb(3).func(X,Y,Z,t);
 [L1, L2, L3, W, history_var] = constitutive(props,u1,u2,u3,history_var,delta,...
-    constit_invar,chiB,dv, Nx,Ny,Nz);
+    constit_invar,chiB,dv, Nx,Ny,Nz, run_in_gpu);
 rho = props(2);
 
 k = 1;% time step counter
 ks = 1;% snapshot counter
 Output = struct;% struct varibale to record output data
+%generate output movie
+if (visualization_during_analysis == 1)
+open_Matlab_video;
+end
+if (run_in_gpu==1)
+    initial_gpu_arrays;
+end
 % open tecplot file if user chooses to save output as .plt file 
 if (tecplot_output == 1)
    fileID1 = fopen('Results.plt','a'); 
    fprintf(fileID1,'%6s %6s %6s %12s\r\n','x','y','z','damage');
 end
 
-
+tic
 for t = dt:dt:t_max % t is the current time
     
     history_var.t = t;
@@ -83,7 +90,7 @@ for t = dt:dt:t_max % t is the current time
     % Update internal forces, damage, body forces, and BC
 
     [L1, L2, L3, W, history_var] = constitutive(props,u1,u2,u3,history_var,delta,...
-        constit_invar,chiB,dv, Nx,Ny,Nz);
+        constit_invar,chiB,dv, Nx,Ny,Nz, run_in_gpu);
  
     update_tractions;
     
@@ -105,25 +112,46 @@ for t = dt:dt:t_max % t is the current time
         fprintf('...dumping output...\n');
          dump_output;
         % Visualization (snapshots)
-        if (plot_output == 1)
+        if (visualization_during_analysis == 1)
             fprintf('...plotting...\n');
             visualization;
         end
+
         ks = ks + 1;
     end
     
     k = k + 1;
 
 end
+toc
 fprintf('***** ANALYSIS COMPLETED *****\n');
-% save outputs to Results.mat file:
-fprintf('...saving results to file...\n');
-save('Results.mat','Output','X','Y','Z','t','chiB','-v7.3')
+
+% close the video in the case it creates movie from the snapshots during
+% analysis
+if ( visualization_during_analysis == 1)
+close_Matlab_video
+end
+
+% create plot/movie at the end  without reperesenting the snapshots during
+% analysis
+if ( visualization_during_analysis == 0)
+    
+    open_Matlab_video;
+    No_snapshots = ks;
+    for ks = 1:No_snapshots-1
+        visualization;
+    end
+    close_Matlab_video
+end
+
+
 % close tecplot file
 if (tecplot_output == 1)
    fclose(fileID1); 
 end
 
-
+% save outputs to Results.mat file:
+fprintf('...saving results to file...\n');
+save('Results.mat','Output','X','Y','Z','t','chiB','-v7.3')
 
 
