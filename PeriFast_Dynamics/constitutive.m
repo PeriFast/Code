@@ -8,7 +8,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [L1, L2, L3, W, history_var] = ...
-    constitutive(props,u1,u2,u3,history_var,delta,constit_invar,chiB,dv, Nx,Ny,Nz)
+    constitutive(props,u1,u2,u3,history_var,delta,constit_invar,chiB,dv, Nx,Ny,Nz, run_in_gpu)
 
 mat_type = props(1); % material model
 
@@ -271,7 +271,25 @@ if mat_type == 2
         K33_shape_inv =  history_var.K_inv33;
         K_update = history_var.K_update;
     end
-    
+    if run_in_gpu ==1
+        %gather K-shapes for calculation of inv(k)
+        K11_shape = gather(K11_shape);
+        K12_shape = gather(K12_shape);
+        K13_shape = gather(K13_shape);
+        K22_shape = gather(K22_shape);
+        K23_shape = gather(K23_shape);
+        K33_shape = gather(K33_shape);
+        K11_shape_inv = gather(K11_shape_inv);
+        K12_shape_inv = gather(K12_shape_inv);
+        K13_shape_inv = gather(K13_shape_inv);
+        K21_shape_inv = gather(K21_shape_inv);
+        K22_shape_inv = gather(K22_shape_inv);
+        K23_shape_inv = gather(K23_shape_inv);
+        K31_shape_inv = gather(K31_shape_inv);
+        K32_shape_inv = gather(K32_shape_inv);
+        K33_shape_inv = gather(K33_shape_inv);
+        K_update = gather(K_update);
+    end
     
     
     for qx = 1:Ny
@@ -296,9 +314,22 @@ if mat_type == 2
                     K31_shape_inv (qx,qy,qz) = K_shape_inv(3,1);
                     K32_shape_inv (qx,qy,qz) = K_shape_inv(3,2);
                     K33_shape_inv (qx,qy,qz) = K_shape_inv(3,3);
+
                 end
             end
         end
+    end
+    if run_in_gpu ==1
+        %make gpuarray
+        K11_shape_inv = gpuArray(K11_shape_inv);
+        K12_shape_inv = gpuArray(K12_shape_inv);
+        K13_shape_inv = gpuArray(K13_shape_inv);
+        K21_shape_inv = gpuArray(K21_shape_inv);
+        K22_shape_inv = gpuArray(K22_shape_inv);
+        K23_shape_inv = gpuArray(K23_shape_inv);
+        K31_shape_inv = gpuArray(K31_shape_inv);
+        K32_shape_inv = gpuArray(K32_shape_inv);
+        K33_shape_inv = gpuArray(K33_shape_inv);
     end
     
     % store K_inv for next time step:
