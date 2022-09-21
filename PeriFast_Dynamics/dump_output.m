@@ -19,7 +19,20 @@ Output(ks).W = W; % strain energy density
 Output(ks).d = history_var.damage; % damage index
 Output(ks).lambda = history_var.lambda;  % lambda
 
-
+if (run_in_gpu ==1)
+    Output(ks).u1 = real(gather(Output(ks).u1)); 
+    Output(ks).u2 = real(gather(Output(ks).u2));
+    Output(ks).u3 = real(gather(Output(ks).u3));
+    Output(ks).u_mag = real(gather(Output(ks).u_mag));
+    Output(ks).v1 = real(gather(Output(ks).v1)); 
+    Output(ks).v2= real(gather(Output(ks).v2));
+    Output(ks).v3= real(gather(Output(ks).v3));
+    Output(ks).v_mag = real(gather(Output(ks).v_mag));
+    Output(ks).W = real(gather(Output(ks).W));
+    Output(ks).d = real(gather(Output(ks).d));
+    Output(ks).lambda = real(gather(Output(ks).lambda));
+    chiB = gather(chiB); 
+end
 
 % if user wants to have output as tecplot file (tecplot_output ==1 in inputs.m)
 % create techplot for damage results

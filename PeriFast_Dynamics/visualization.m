@@ -5,6 +5,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % for plotting outputs
+
 chiB_lambda = chiB.*(Output(ks).lambda); % mask nodes outside the body or damaged nodes
 plot_nodes = logical(chiB_lambda);% nodes that belong to the main body
 x_plot = X(plot_nodes); %  coorniates of nodes in x-direction
@@ -32,7 +33,7 @@ scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,damage_plot(:));
 colormap jet
 axis equal;
 caxis([0 1])
-title ( sprintf ('d , t = %1.2e sec',t));
+title ( sprintf ('d ,t = %1.2e sec',dt*ks*5));
 colorbar;
 drawnow
 
@@ -40,7 +41,7 @@ drawnow
 
 %%% user can uncomment the part below to plot other outputs:
 
-% plot v1 as figure (2)
+% plot v1 as figure (2), velocity in x direction
 % figure(2)
 % scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,v1_plot(:));
 % colormap jet
@@ -50,7 +51,7 @@ drawnow
 % colorbar;
 % drawnow
 % 
-% plot v2  as figure (3)
+% plot v2  as figure (3), velocity in ydirection
 % figure(3)
 % scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,v2_plot(:));
 % colormap jet
@@ -60,7 +61,7 @@ drawnow
 % colorbar;
 % drawnow
 % 
-% plot strain energy density  figure (4)
+% plot strain energy density  figure (4), 
 % figure(4)
 % scatter3(xcur_plot(:),ycur_plot(:),zcur_plot(:), 5,energy_plot(:));
 % colormap jet
@@ -69,5 +70,8 @@ drawnow
 % title ( sprintf ('W , t = %1.2e sec',t));
 % colorbar;
 % drawnow
-     
+
+
+% create movies from the frams (snapshots)
+create_Matlab_video(damage_video);
 

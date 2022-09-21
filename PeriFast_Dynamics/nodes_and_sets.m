@@ -21,13 +21,19 @@ Ldx = x_max - x_min; % fitted_box - x dimension
 Ldy = y_max - y_min; % fitted_box - y dimension
 Ldz = z_max - z_min; % fitted_box - z dimension
 
+
+
 % define number of nodes in each direction
-Nx = 510; % resolution in x (Best for FFT to use a power of 2)
-Ny = 210;  % resolution in y
-Nz = 20;  % resolution in z
+% Nx = 510; % resolution in x (Best for FFT to use a power of 2)
+% Ny = 210;  % resolution in y
+% Nz = 20;  % resolution in z
+Nx = 256; % resolution in x (Best for FFT to use a power of 2)
+Ny = 106;  % resolution in y
+Nz = 10;  % resolution in z
 
 % Extend the fitted box to the periodic domain (T) by (m+1)dx on both sides
 extension = 2e-3;
+
 x_min_T = x_min;
 x_max_T = x_max + extension;
 y_min_T = y_min;
@@ -45,17 +51,20 @@ Box_T.xmin = x_min_T; Box_T.xmax = x_max_T; Box_T.Lx = Lx_T;
 Box_T.ymin = y_min_T; Box_T.ymax = y_max_T; Box_T.Ly = Ly_T;
 Box_T.zmin = z_min_T; Box_T.zmax = z_max_T; Box_T.Lz = Lz_T;
 
-
 % grid spacing
 dx = Lx_T/Nx;
 dy = Ly_T/Ny;
 dz = Lz_T/Nz;
+
 Box_T.dx =  dx; Box_T.dy =  dy; Box_T.dz =  dz;
 x = (x_min_T + (0:Nx - 1)*dx)';
 y = (y_min_T + (0:Ny - 1)*dy)';
 z = (z_min_T + (0:Nz - 1)*dz)';
 [X,Y,Z] = meshgrid(x,y,z);
 dv = dx*dy*dz;
+
+% check discritization
+discretization_check(delta,Nx,Ny,Nz,dx,dy,dz,Ldx,Ldy,Ldz,extension);
 
 % Construct Mask functions (ChiB): defines the body configuration
 chiB = double(X >= x_min & X <= x_max & Y >= y_min & Y <= y_max &...
@@ -104,4 +113,36 @@ for i = 1: n(1)
 end
 end
 
+function discretization_check(delta,Nx, Ny,Nz,dx,dy,dz,Ldx,Ldy,Ldz,extension)
+% safty check fo horizon size
+if(delta <= 0)
+    error('delta must be a positive number');
+end
 
+% safty check for extension
+if(extension <= delta)
+    error('extension must be at least equal to delta');
+end
+% safty check for physical domain size
+if(delta >= Ldx)
+    warning('delta is larger than physical domain length in x direction, choose a smaller horizon');
+end
+% safty check for number of nodes (need to be an even number in curent
+% version of code)
+if(mod(Nx,2)== 1 || mod(Ny,2)== 1 ||mod(Nz,2)==1)
+    error('number of nodes are not even, try even numbers for Nx, Ny and Nz');
+end
+if(delta >= Ldy)
+    warning('delta is larger than physical domain length in y direction, choose a smaller horizon');
+end
+if(delta >= Ldz)
+    warning('delta is larger than physical domain length in z direction, choose a smaller horizon');
+end
+% safty check for m-value factor
+if(delta/dx < 3 || delta/dy < 3  || delta/dz < 3)
+    warning('m-value is less than 3, make discritization finer');
+end
+if(delta/dx - floor(delta/dx) < 1e-6 || delta/dy - floor(delta/dy) < 1e-6  || delta/dz - floor(delta/dz) < 1e-6)
+    error('m-value is integer, multiply delta by 1.02');
+end
+end
