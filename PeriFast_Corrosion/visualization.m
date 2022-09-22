@@ -1,22 +1,13 @@
-function visualization (X,Y,Z,C,Ldx,dx,Ldy,dy,Ldz,dz,t,C_sat,run_in_gpu,writerObj)
+function visualization (X,Y,Z,C,Ldx,dx,Ldy,dy,Ldz,dz,t,C_sat,writerObj)
 % at every second
 % plot the result, create a 2D slice normal to z direction
 % output the concentration data to tecplot
 % the user could add any other plots freely
 xs = [];
 ys = [];
-zs = 0;%19e-6;
-if(run_in_gpu == 1)
-    C=gather(C);
-    X=gather(X);
-    Y=gather(Y);
-    Z=gather(Z);
-    slice(X,Y,Z,C,xs,ys,zs);
-else
-    slice(X,Y,Z,C,xs,ys,zs);
-end
+zs = 0;
+slice(X,Y,Z,C,xs,ys,zs);
 shading flat
-%colormap jet
 xlabel('X')
 ylabel('Y')
 zlabel('Z')

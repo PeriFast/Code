@@ -14,16 +14,28 @@ dt = 0.8e-3; % time step (should satisfy the stability condition)
 %visualization parameters
 is_plot_in_Matlab = 1; % if want to plot at certain time and generate a video, set to 1
 is_output_to_Tecplot = 1; % if want to write data to Tecplot at certain time, set to 1
-t_output = 10; %time interval of write data to Tecplot .plt file
-t_target = t_output;
+freq_output = 30;%data dump frequence
+freq_plot = 100; %plot frequence
+if(freq_output == 0)
+    t_output_interval = nan;
+else
+    t_output_interval = t_max/freq_output; %time interval of write data
+end
+t_output_target = t_output_interval;
+if(freq_plot == 0)
+    t_plot_interval = nan;
+else
+    t_plot_interval = t_max/freq_plot; %time interval of plotting in MATLAB
+end
+t_plot_target = t_plot_interval;
 
 has_salt_layer = 0; %if consider salt layer effect, set to 1
 
 run_in_gpu = 0; %if want to run in gpu, set to 1
 
-input_check(corrosion_type, K, cur_i, n, F, C_sat, C_solid, t_max, t_output);
+input_check(corrosion_type, K, cur_i, n, F, C_sat, C_solid, t_max, freq_output, freq_plot);
 
-function input_check(corrosion_type, K, cur_i, n, F, C_sat, C_solid, t_max, t_output)
+function input_check(corrosion_type, K, cur_i, n, F, C_sat, C_solid, t_max, freq_output, freq_plot)
 if(corrosion_type ~= 0 && corrosion_type ~= 1)
     error('Corrosion_type is wrong');
 end
@@ -48,10 +60,10 @@ end
 if(t_max <= 0)
     error('Corrosion duration time must be a positive number');
 end
-if(t_output <=0)
-    error('Time interval between data dump must be a positive number');
+if(freq_output <=0)
+    warning('No data will be dumped. Set freq_output to a positive number');
 end
-if(t_output > t_max)
-    warning('Time interval of write data is larger than total time, only final result will be saved');
+if(freq_plot <=0)
+    warning('No visualization will be plot. Set freq_plot to a positive number');
 end
 end
