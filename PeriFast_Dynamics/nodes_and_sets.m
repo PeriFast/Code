@@ -1,16 +1,16 @@
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [delta,Box_T,Nx,Ny,Nz,X,Y,Z,dv,chiB,chit_x,chit_y,chit_z,...
+    chiG_x,chiG_y,chiG_z,chi_predam,chiOx,chiOy,chiOz,dy]...
+    = nodes_and_sets(props,dt)
 % this function contains the PD horizon and discrete geometrical data 
 % including nodal coordinates and  characteristic functions that define
 % various subdomains: the original body,constrained volumes,
 % pre-damaged regions, and subregions where tractions applied as body forces 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [delta,Box_T,Nx,Ny,Nz,X,Y,Z,dv,chiB,chit_x,chit_y,chit_z,...
-    chiG_x,chiG_y,chiG_z,chi_predam,chiOx,chiOy,chiOz,dy]...
-    = nodes_and_sets
-
 
 delta = 1.02e-3;  % horizon size
+
+E = props(4);
+rho = props(2);
+beta= sqrt(rho*delta^2/(12*E));
 
 % define enclosing box
 x_min = 0; x_max = 0.1;
@@ -24,15 +24,15 @@ Ldz = z_max - z_min; % fitted_box - z dimension
 
 
 % define number of nodes in each direction
-% Nx = 510; % resolution in x (Best for FFT to use a power of 2)
-% Ny = 210;  % resolution in y
-% Nz = 20;  % resolution in z
-Nx = 256; % resolution in x (Best for FFT to use a power of 2)
-Ny = 106;  % resolution in y
-Nz = 10;  % resolution in z
+Nx = 510; % resolution in x (Best for FFT to use a power of 2)
+Ny = 210;  % resolution in y
+Nz = 20;  % resolution in z
+% Nx = 256; % resolution in x (Best for FFT to use a power of 2)
+% Ny = 106;  % resolution in y
+% Nz = 10;  % resolution in z
 
 % Extend the fitted box to the periodic domain (T) by (m+1)dx on both sides
-extension = 2e-3;
+extension = 1.01*delta; % extension must be larger than delta
 
 x_min_T = x_min;
 x_max_T = x_max + extension;
@@ -64,7 +64,7 @@ z = (z_min_T + (0:Nz - 1)*dz)';
 dv = dx*dy*dz;
 
 % check discritization
-discretization_check(delta,Nx,Ny,Nz,dx,dy,dz,Ldx,Ldy,Ldz,extension);
+discretization_check(delta,Nx,Ny,Nz,dx,dy,dz,Ldx,Ldy,Ldz,beta,dt);
 
 % Construct Mask functions (ChiB): defines the body configuration
 chiB = double(X >= x_min & X <= x_max & Y >= y_min & Y <= y_max &...
@@ -113,16 +113,12 @@ for i = 1: n(1)
 end
 end
 
-function discretization_check(delta,Nx, Ny,Nz,dx,dy,dz,Ldx,Ldy,Ldz,extension)
+function discretization_check(delta,Nx, Ny,Nz,dx,dy,dz,Ldx,Ldy,Ldz,beta,dt)
 % safty check fo horizon size
 if(delta <= 0)
     error('delta must be a positive number');
 end
 
-% safty check for extension
-if(extension <= delta)
-    error('extension must be at least equal to delta');
-end
 % safty check for physical domain size
 if(delta >= Ldx)
     warning('delta is larger than physical domain length in x direction, choose a smaller horizon');
@@ -144,5 +140,9 @@ if(delta/dx < 3 || delta/dy < 3  || delta/dz < 3)
 end
 if(delta/dx - floor(delta/dx) < 1e-6 || delta/dy - floor(delta/dy) < 1e-6  || delta/dz - floor(delta/dz) < 1e-6)
     error('m-value is integer, multiply delta by 1.02');
+end
+
+if dt > beta
+    warning('dt may not meet the stability condition. If user notice unstable results, set dt less than %d',beta);
 end
 end

@@ -8,9 +8,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PeriFast/Dynamics, a compact and user-friendly MATLAB code for
-% fast peridynamic (PD) simulations for deformation and fracture.
+% This code solves 3D defromation and fracture problems with peridynamic(uniform)
+% models discretized using the Fast Convolution-Based Method (FCBM)
+% Detailed description of the code can be found in:
+% 'PeriFast/Dynamics: a MATLAB code for explicit fast convolution-based
+% peridynamic analysis of deformation and fracture'
 % By: Siavash Jafarzadeh, Farzaneh Mousavi and Florin Bobaru
+%see https://doi.org/10.21203/rs.3.rs-2019917/v1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear; clc;
@@ -23,7 +27,7 @@ LASTN = maxNumCompThreads(1);
 
 % Get nodes and sets
  [delta,Box_T,Nx,Ny,Nz,X,Y,Z,dv,chiB,chit_x,chit_y,chit_z,chiG_x,chiG_y,...
-    chiG_z,chi_predam,chiOx,chiOy,chiOz,dy] = nodes_and_sets;
+    chiG_z,chi_predam,chiOx,chiOy,chiOz,dy] = nodes_and_sets(props,dt);
 
 % Construct constitutive invariants
  constit_invar = pre_constitutive(props,delta,X,Y,Z,Box_T);
@@ -53,8 +57,12 @@ Fbz = Fb(3).func(X,Y,Z,t);
 rho = props(2);
 
 k = 1;% time step counter
+total_time_step = round(t_max/dt);
+snap = round(total_time_step/number_of_data_dump); % number of steps between snapshots for dumping output data
+snap_frame = round(total_time_step/number_of_visualization_frames);
 ks = 1;% snapshot counter
 Output = struct;% struct varibale to record output data
+
 %generate output movie
 if (visualization_during_analysis == 1)
 open_Matlab_video;
@@ -69,11 +77,10 @@ if (tecplot_output == 1)
 end
 
 tic
-for t = dt:dt:t_max % t is the current time
-    
+for t = dt:dt:t_max % t is the current time    
+
     history_var.t = t;
-    fprintf('time step: %d\n',k);
-    
+   
     % Compute volume constraints
      update_VC;
 
@@ -107,12 +114,14 @@ for t = dt:dt:t_max % t is the current time
         (L3 + btz + Fbz)));
     
     % Dump output (snapshots)
-    if (mod(t/dt,snap) < 1e-6)
+    if (mod(round(t/dt),snap) == 0 || t == t_max)
+      fprintf('time step: %d out of %i\n',k,total_time_step);
+
         % Dump data in the struct variable: Output
         fprintf('...dumping output...\n');
          dump_output;
         % Visualization (snapshots)
-        if (visualization_during_analysis == 1)
+        if (visualization_during_analysis == 1 && (mod(round(t/dt), round(snap_frame/snap))==0 || t == t_max))
             fprintf('...plotting...\n');
             visualization;
         end
@@ -132,26 +141,15 @@ if ( visualization_during_analysis == 1)
 close_Matlab_video
 end
 
-% create plot/movie at the end  without reperesenting the snapshots during
-% analysis
-if ( visualization_during_analysis == 0)
-    
-    open_Matlab_video;
-    No_snapshots = ks;
-    for ks = 1:No_snapshots-1
-        visualization;
-    end
-    close_Matlab_video
-end
-
-
-% close tecplot file
+% close tecplot file if it creates tecplot file
 if (tecplot_output == 1)
    fclose(fileID1); 
 end
 
 % save outputs to Results.mat file:
 fprintf('...saving results to file...\n');
-save('Results.mat','Output','X','Y','Z','t','chiB','-v7.3')
+save('Results.mat','Output','X','Y','Z','t','chiB','outputs_var_for_visualization',...
+    'snap_frame','snap','dt','-v7.3')
+
 
 
