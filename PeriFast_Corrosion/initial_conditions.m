@@ -4,7 +4,7 @@ C0 = zeros(Nx,Ny,Nz);
 C0(chi_N == 1) = C_solid; %Big N concentration equal to C_solid
 
 % Generate initial spherical pits, only for pitting corrosion
-if(corrosion_type == 1)
+if(corrosion_type == 2)
     total_pits_no = 20; % total number of initial pits
     for i = 1:total_pits_no
         % randomly generate pits center coordinates, under uniform distribution

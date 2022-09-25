@@ -1,6 +1,5 @@
 function [tdata] = dump_output_Tecplot(tdata,X,Y,Z,C,run_in_gpu,tec_step)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+
 if(run_in_gpu == 1)
     tdata.cubes(tec_step).x=gather(X);
     tdata.cubes(tec_step).y=gather(Y);

@@ -7,3 +7,4 @@ for i = 1:output_size
     visualization(X,Y,Z,Output(i).C,Ldx,dx,Ldy,dy,Ldz,dz,Output(i).t,C_sat,writerObj);
 end
 close(writerObj);
+fprintf('...post processing finished...\n');
