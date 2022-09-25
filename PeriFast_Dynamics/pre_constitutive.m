@@ -1,9 +1,6 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function constit_invar = pre_constitutive(props,delta,X,Y,Z,Box_T)
 % this function contains the time-invariant components of the PD constitutive
 % models 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function constit_invar = pre_constitutive(props,delta,X,Y,Z,Box_T)
 
 mat_type = props(1);
 
