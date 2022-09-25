@@ -46,6 +46,7 @@ if(run_in_gpu == 1)
 end
 tic
 for t = dt:dt:t_max 
+    fprintf('time step: %d out of %i\n',time_step,total_time_step);
     % update the volume constraints
     C_w = update_VC(C_w,C,Nx,Ny,Nz,n1,n2,n3,n4,n5,n6,X,Y,Z,Lx_T,Ly_T,Lz_T,delta,BC_type,BC_value);
     % update the concentration C
@@ -87,3 +88,4 @@ if (is_output_to_Tecplot)
 end
 fprintf('...saving results to file...\n');
 save('Results.mat','Output','X','Y','Z','Ldx','Ldy','Ldz','dx','dy','dz','C_sat','t','chi_N','chi','-v7.3')
+fprintf('...simulation done...\n');
