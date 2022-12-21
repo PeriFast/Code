@@ -32,7 +32,7 @@ Nz = 20;  % resolution in z
 % Nz = 10;  % resolution in z
 
 % Extend the fitted box to the periodic domain (T) by (m+1)dx on both sides
-extension = 1.01*delta; % extension must be larger than delta
+extension = 2e-3; % extension must be larger than delta
 
 x_min_T = x_min;
 x_max_T = x_max + extension;
